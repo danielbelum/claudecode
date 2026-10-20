@@ -170,6 +170,7 @@ tbody tr:hover td { background: var(--accent-soft); }
       <div class="duration" id="durOut" aria-live="polite">—</div>
     </div>
     <label class="field" style="max-width:12rem">Wait time (min), if any<input type="text" id="waitIn" inputmode="numeric" autocomplete="off" class="mono" placeholder="None"></label>
+    <label class="field" id="waitReasonField" hidden>Wait reason<input type="text" id="waitReasonIn" autocomplete="off" placeholder="e.g. Nurse was charting"></label>
 
     <details id="moreDetails">
       <summary>Department and date for this install</summary>
@@ -201,7 +202,7 @@ tbody tr:hover td { background: var(--accent-soft); }
     <div class="totals" id="totals"></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Date</th><th>Old serial</th><th>New serial</th><th>Department</th><th>Dept. lead</th><th>Duration</th><th>Wait</th><th>Room</th></tr></thead>
+        <thead><tr><th>Date</th><th>Old serial</th><th>New serial</th><th>Department</th><th>Dept. lead</th><th>Duration</th><th>Wait</th><th>Wait reason</th><th>Room</th></tr></thead>
         <tbody id="sumBody"></tbody>
       </table>
     </div>
@@ -285,7 +286,7 @@ function rec(id = activeId) {
   return { ...blank(), ...fromStore, ...o, unsure: { ...(fromStore.unsure || {}), ...(o.unsure || {}) } };
 }
 function blank() {
-  return { status: "open", dept: dept.dept, lead: dept.lead, date: localDate(), room: "", newSerial: "", oldSerial: "", computerName: "", start: "", end: "", wait: "", unsure: {} };
+  return { status: "open", dept: dept.dept, lead: dept.lead, date: localDate(), room: "", newSerial: "", oldSerial: "", computerName: "", start: "", end: "", wait: "", waitReason: "", unsure: {} };
 }
 
 function save(patch, id = activeId) {
@@ -420,6 +421,8 @@ function render() {
   setVal($("#endIn"), r.end || "");
   $("#durOut").textContent = fmtDur(minutesBetween(r.start, r.end));
   setVal($("#waitIn"), r.wait === "" || r.wait == null ? "" : String(r.wait));
+  setVal($("#waitReasonIn"), r.waitReason || "");
+  $("#waitReasonField").hidden = !(r.wait || r.waitReason);
   setVal($("#recDept"), r.dept || "");
   setVal($("#recLead"), r.lead || "");
   setVal($("#recDate"), r.date || "");
@@ -466,6 +469,7 @@ function renderSummary() {
     cell(i.dept); cell(i.lead);
     cell(fmtDur(m), true);
     { const td = document.createElement("td"); td.className = "mono"; td.textContent = i.wait === "" || i.wait == null ? "" : i.wait + " min"; tr.appendChild(td); }
+    { const td = document.createElement("td"); td.textContent = i.waitReason || ""; td.style.whiteSpace = "normal"; td.style.minWidth = "10rem"; if (i.wait && !i.waitReason) { const c = document.createElement("span"); c.className = "chip"; c.textContent = "needs reason"; td.appendChild(c); } tr.appendChild(td); }
     cell(i.room, false, !!u.room);
     tr.tabIndex = 0;
     tr.addEventListener("click", () => openForEdit(i.id));
@@ -524,6 +528,7 @@ function bind() {
 
   $("#startIn").addEventListener("change", (e) => save({ start: e.target.value }));
   $("#endIn").addEventListener("change", (e) => save({ end: e.target.value }));
+  $("#waitReasonIn").addEventListener("change", (e) => save({ waitReason: e.target.value.trim() }));
   $("#waitIn").addEventListener("change", (e) => {
     const v = e.target.value.trim();
     if (v === "") { save({ wait: "" }); return; }
@@ -573,8 +578,8 @@ function bind() {
 
   $("#copyBtn").addEventListener("click", () => {
     const rows = doneOn(selectedDay);
-    const lines = [["Date", "Old serial", "New serial", "Department", "Dept. lead", "Duration (min)", "Wait (min)", "Room"].join("\t")]
-      .concat(rows.map((i) => [usDate(i.date), i.oldSerial, i.newSerial, i.dept, i.lead, minutesBetween(i.start, i.end) ?? "", i.wait ?? "", i.room].join("\t")));
+    const lines = [["Date", "Old serial", "New serial", "Department", "Dept. lead", "Duration (min)", "Wait (min)", "Wait reason", "Room"].join("\t")]
+      .concat(rows.map((i) => [usDate(i.date), i.oldSerial, i.newSerial, i.dept, i.lead, minutesBetween(i.start, i.end) ?? "", i.wait ?? "", (i.waitReason || "").replace(/[\t\n]+/g, " "), i.room].join("\t")));
     const text = lines.join("\n");
     const fb = $("#copyFallback");
     const fallback = () => { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); toast("Select all and copy the text below."); };
