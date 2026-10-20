@@ -1,0 +1,601 @@
+<title>PC Install Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one narrow column for a phone in one hand. Department bar, current install card, then the day's summary table. */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --ink: #15201e;
+  --muted: #586864;
+  --line: #d3dcd9;
+  --accent: #0a6b60;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefeb;
+  --warn: #8a5300;
+  --warn-bg: #fff1d6;
+  --danger: #a3261b;
+  --ok: #2c7a39;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1615; --surface: #172220; --ink: #e3ebe9; --muted: #98aaa5; --line: #2b3836;
+    --accent: #52c3b2; --accent-ink: #082421; --accent-soft: #163a35;
+    --warn: #f2b65c; --warn-bg: #352812; --danger: #f08a7f; --ok: #79c98a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1615; --surface: #172220; --ink: #e3ebe9; --muted: #98aaa5; --line: #2b3836;
+  --accent: #52c3b2; --accent-ink: #082421; --accent-soft: #163a35;
+  --warn: #f2b65c; --warn-bg: #352812; --danger: #f08a7f; --ok: #79c98a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+}
+.wrap {
+  max-width: 640px; margin: 0 auto; display: grid; gap: 16px;
+  padding-block: 16px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1 { font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 1rem; margin: 0; text-wrap: balance; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+button, .btn {
+  font: inherit; font-weight: 600; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 10px 14px; min-height: 44px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+button.primary, .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.ghost { background: transparent; }
+button.danger { color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: default; }
+button:focus-visible, .btn:focus-within, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+label.field { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); font-weight: 500; min-width: 0; }
+input[type="text"], input[type="time"], select {
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; min-height: 44px; width: 100%; min-width: 0;
+}
+input.mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Department bar */
+.dept-now { font-size: 1.1rem; font-weight: 600; }
+
+/* Steps */
+.steps { display: grid; gap: 12px; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.step-n {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700;
+  background: var(--accent-soft); color: var(--accent);
+}
+.step.done .step-n { background: var(--accent); color: var(--accent-ink); }
+.step-body { display: grid; gap: 6px; min-width: 0; }
+.step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.step-title { font-weight: 600; }
+.step-sub { font-size: 0.8rem; color: var(--muted); }
+.input-cam { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.cam { position: relative; overflow: hidden; padding: 10px 12px; }
+.cam input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cam svg { width: 20px; height: 20px; }
+.note { font-size: 0.85rem; border-radius: 8px; padding: 8px 10px; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.note.reading { background: var(--accent-soft); color: var(--ink); }
+.note.unsure { background: var(--warn-bg); color: var(--warn); }
+.note.error { background: var(--warn-bg); color: var(--warn); }
+.note button { min-height: 32px; padding: 4px 10px; font-size: 0.82rem; }
+.times { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.duration { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 600; padding-bottom: 8px; white-space: nowrap; }
+details summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+details[open] summary { margin-bottom: 10px; }
+
+/* Summary */
+.table-scroll { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; padding: 6px 10px 6px 0; white-space: nowrap; border-bottom: 1px solid var(--line); }
+td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--accent-soft); }
+.chip { display: inline-block; font-family: var(--font-body); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warn); background: var(--warn-bg); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 1px; }
+.totals { font-size: 0.9rem; color: var(--muted); }
+.empty { color: var(--muted); font-size: 0.92rem; padding: 8px 0; }
+.banner { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 12px 14px; font-size: 0.92rem; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; max-width: calc(100% - 32px); z-index: 20; }
+@media (max-width: 420px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .times { grid-template-columns: 1fr 1fr; }
+  .duration { grid-column: 1 / -1; padding-bottom: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .note.reading::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+}
+</style>
+
+<div class="wrap">
+  <header class="row spread">
+    <div>
+      <div class="eyebrow">PC replacement</div>
+      <h1>PC Install Log</h1>
+    </div>
+    <div class="muted mono" id="todayLabel"></div>
+  </header>
+
+  <div class="banner" id="noDb" hidden>Saving isn't available in this view. Open this page in the Claude app or on claude.ai while signed in, or your installs won't be kept.</div>
+
+  <!-- Department -->
+  <section class="card" id="deptCard" aria-labelledby="deptTitle">
+    <div class="row spread" id="deptView">
+      <div>
+        <div class="eyebrow" id="deptTitle">Department</div>
+        <div class="dept-now" id="deptNow">Not set</div>
+      </div>
+      <button type="button" id="deptChange">Change</button>
+    </div>
+    <form id="deptForm" class="grid2" hidden>
+      <label class="field">Department<input type="text" id="deptIn" autocomplete="off" placeholder="e.g. Tower 2"></label>
+      <label class="field">Department lead<input type="text" id="leadIn" autocomplete="off" placeholder="e.g. Karen"></label>
+      <div class="row" style="grid-column: 1 / -1">
+        <button type="submit" class="primary">Set department</button>
+        <button type="button" class="ghost" id="deptCancel">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Current install -->
+  <section class="card" aria-labelledby="curTitle">
+    <div class="row spread">
+      <div>
+        <div class="eyebrow" id="curEyebrow">Current install</div>
+        <h2 id="curTitle">New install</h2>
+      </div>
+      <span class="muted" id="curDept"></span>
+    </div>
+
+    <div class="steps" id="steps"></div>
+
+    <div class="times">
+      <label class="field">Start<input type="time" id="startIn"></label>
+      <label class="field">Finish<input type="time" id="endIn"></label>
+      <div class="duration" id="durOut" aria-live="polite">—</div>
+    </div>
+
+    <details id="moreDetails">
+      <summary>Department and date for this install</summary>
+      <div class="grid2">
+        <label class="field">Department<input type="text" id="recDept" autocomplete="off"></label>
+        <label class="field">Department lead<input type="text" id="recLead" autocomplete="off"></label>
+        <label class="field">Date<input type="text" id="recDate" class="mono" autocomplete="off" placeholder="YYYY-MM-DD"></label>
+      </div>
+    </details>
+
+    <div class="row spread">
+      <button type="button" class="primary" id="finishBtn">Save install</button>
+      <div class="row">
+        <button type="button" class="ghost" id="cancelEditBtn" hidden>Close</button>
+        <button type="button" class="ghost danger" id="deleteBtn" hidden>Delete</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section class="card" aria-labelledby="sumTitle">
+    <div class="row spread">
+      <div>
+        <div class="eyebrow">Summary</div>
+        <h2 id="sumTitle">Completed installs</h2>
+      </div>
+      <select id="dateSel" aria-label="Day" style="width:auto"></select>
+    </div>
+    <div class="totals" id="totals"></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Old serial</th><th>New serial</th><th>Department</th><th>Dept. lead</th><th>Duration</th><th>Room</th></tr></thead>
+        <tbody id="sumBody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="sumEmpty" hidden>No completed installs on this day yet. Save an install above and it appears here.</div>
+    <div class="row">
+      <button type="button" id="copyBtn">Copy table</button>
+      <span class="muted" style="font-size:0.85rem">Tap a row to fix it.</span>
+    </div>
+    <textarea id="copyFallback" hidden readonly rows="4" style="width:100%;font-family:var(--font-mono);font-size:12px"></textarea>
+  </section>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+const CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+
+const STEPS = [
+  { field: "room", title: "Room sign", sub: "Photo starts the clock", mono: false,
+    prompt: 'This photo shows a hospital room door sign. Read the room number exactly as printed (for example A232).' },
+  { field: "newSerial", title: "New PC serial", sub: "Lenovo label, after S/N", mono: true,
+    prompt: 'This photo shows the serial number label on a new Lenovo PC. Read the serial number printed after "S/N" (for example MZ0370R8). Ignore the model or machine type number.' },
+  { field: "oldSerial", title: "Old PC service tag", sub: "Dell, label location varies", mono: true,
+    prompt: 'This photo shows part of an old Dell PC. Find the Dell service tag, usually printed after "SERVICE TAG" or "S/N": 7 letters and digits, for example 4ZT1XR1. The label can be anywhere on the case.' },
+  { field: "computerName", title: "Screen", sub: "Computer name. Photo stops the clock", mono: true,
+    prompt: 'This photo shows a computer screen. Read the computer name shown after "Computername:" exactly, keeping its case (for example vd01tw2rm032).' },
+];
+const SUFFIX = '\n\nReply with only JSON: {"value": string, "unsure": string}. "value" is the text you read, or "" if you cannot find it. "unsure" names any character you could not read with certainty and its likely alternatives (for example "5th character could be X or K"), or "" if every character is clear. Never silently pick between look-alike characters such as 0/O, 1/I, 8/B, 5/S or 2/Z: name them in "unsure".';
+
+const $ = (s) => document.querySelector(s);
+const pad = (n) => String(n).padStart(2, "0");
+const localDate = (d = new Date()) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const hhmm = (ms) => { const d = new Date(ms); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
+function minutesBetween(s, e) {
+  if (!s || !e) return null;
+  const [a, b] = s.split(":").map(Number), [c, d] = e.split(":").map(Number);
+  let m = (c * 60 + d) - (a * 60 + b);
+  if (m < 0) m += 1440;
+  return m;
+}
+const fmtDur = (m) => m == null ? "—" : (m >= 60 ? Math.floor(m / 60) + " h " + (m % 60) + " min" : m + " min");
+function fmt12(t) {
+  if (!t) return "";
+  let [h, m] = t.split(":").map(Number);
+  const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+  return h + ":" + pad(m) + " " + ap;
+}
+function fmtDay(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return isNaN(dt) ? iso : dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+// A phone photo's file time is when it was taken; fall back to now if it looks wrong.
+function photoTime(file) {
+  const t = file && file.lastModified, now = Date.now();
+  return hhmm(t && t <= now + 60000 && now - t < 12 * 3600 * 1000 ? t : now);
+}
+function toast(msg) {
+  const el = $("#toast"); el.textContent = msg; el.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, 3200);
+}
+
+let db = null, sample = null, canImages = false;
+let installs = [];                 // from the store
+let dept = { dept: "", lead: "" }; // current department
+let activeId = null;               // install shown in the editor
+let editingDone = false;           // true when fixing a saved install
+const created = new Set();         // ids that exist in the store
+const overlay = {};                // local edits not yet echoed back, by id
+const notes = {};                  // per id+field status: {kind, text}
+let writeChain = Promise.resolve();
+let selectedDay = localDate();
+
+function rec(id = activeId) {
+  if (!id) return blank();
+  const fromStore = installs.find((i) => i.id === id) || {};
+  const o = overlay[id] || {};
+  return { ...blank(), ...fromStore, ...o, unsure: { ...(fromStore.unsure || {}), ...(o.unsure || {}) } };
+}
+function blank() {
+  return { status: "open", dept: dept.dept, lead: dept.lead, date: localDate(), room: "", newSerial: "", oldSerial: "", computerName: "", start: "", end: "", unsure: {} };
+}
+
+function save(patch, id = activeId) {
+  if (!id) {
+    id = activeId = (db ? db.collection("installs").doc().id : "local-" + Date.now());
+  }
+  const o = overlay[id] || (overlay[id] = {});
+  for (const [k, v] of Object.entries(patch)) {
+    if (k === "unsure") o.unsure = { ...(o.unsure || {}), ...v };
+    else o[k] = v;
+  }
+  render();
+  if (!db) return;
+  writeChain = writeChain.then(async () => {
+    const ref = db.collection("installs").doc(id);
+    if (!created.has(id) && !installs.some((i) => i.id === id)) {
+      const full = rec(id); delete full.id;
+      await ref.set({ ...full, createdAt: Date.now() });
+      created.add(id);
+    } else {
+      await ref.update(patch);
+    }
+  }).catch((e) => toast(e && e.code === "quota_exceeded" ? "Storage is full. Delete old installs to save new ones." : "Couldn't save that change. Check your connection and try again."));
+}
+
+/* ---------- Steps UI (built once, filled on each render) ---------- */
+function buildSteps() {
+  const box = $("#steps");
+  STEPS.forEach((s, i) => {
+    const el = document.createElement("div");
+    el.className = "step"; el.id = "step-" + s.field;
+    el.innerHTML =
+      '<div class="step-n">' + (i + 1) + '</div>' +
+      '<div class="step-body">' +
+        '<div class="step-head"><label class="step-title" for="in-' + s.field + '">' + s.title + '</label><span class="step-sub">' + s.sub + '</span></div>' +
+        '<div class="input-cam">' +
+          '<input type="text" id="in-' + s.field + '" autocomplete="off" autocapitalize="' + (s.field === "computerName" ? "off" : "characters") + '" spellcheck="false"' + (s.mono ? ' class="mono"' : "") + '>' +
+          '<label class="btn cam" title="Take or choose a photo">' + CAM_ICON + '<span>Photo</span><input type="file" accept="image/*" id="cam-' + s.field + '" aria-label="Photo of ' + s.title + '"></label>' +
+        '</div>' +
+        '<div class="note" id="note-' + s.field + '" hidden></div>' +
+      '</div>';
+    box.appendChild(el);
+    const input = el.querySelector("#in-" + s.field);
+    input.addEventListener("change", () => {
+      let v = input.value.trim();
+      if (s.field === "newSerial" || s.field === "oldSerial") v = v.toUpperCase().replace(/\s+/g, "");
+      const patch = { [s.field]: v, unsure: { [s.field]: "" } };
+      if (s.field === "room" && v && !rec().start) patch.start = hhmm(Date.now());
+      save(patch);
+    });
+    el.querySelector("#cam-" + s.field).addEventListener("change", (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      ev.target.value = "";
+      if (f) readPhoto(s, f);
+    });
+  });
+}
+
+async function readPhoto(step, file) {
+  const t = photoTime(file);
+  const timePatch = {};
+  if (step.field === "room" && !rec().start) timePatch.start = t;
+  if (step.field === "computerName") timePatch.end = t;
+  if (Object.keys(timePatch).length) save(timePatch);
+  const id = activeId;
+  const key = id + ":" + step.field;
+  if (!sample || !canImages) {
+    notes[key] = { kind: "error", text: "Photo reading isn't available here. Type the value instead." };
+    render(); return;
+  }
+  notes[key] = { kind: "reading", text: "Reading photo…" };
+  render();
+  try {
+    const r = await sample.json(step.prompt + SUFFIX, { images: [file] });
+    let v = String((r && r.value) || "").trim();
+    const u = String((r && r.unsure) || "").trim();
+    if (step.field === "newSerial" || step.field === "oldSerial") v = v.toUpperCase().replace(/\s+/g, "");
+    if (!v) {
+      notes[key] = { kind: "error", text: "Couldn't find it in this photo. Try a closer, sharper shot, or type it." };
+    } else {
+      delete notes[key];
+      save({ [step.field]: v, unsure: { [step.field]: u } }, id);
+    }
+  } catch (e) {
+    const c = e && e.code;
+    const text = c === "not_granted" || c === "sampling_disabled" || c === "images_unavailable"
+      ? "Photo reading is turned off for this page. Type the value instead."
+      : c === "rate_limited" ? "Too many photos at once. Wait a moment, then try again."
+      : c === "image_rejected" ? "That photo couldn't be used. Try another shot."
+      : "Couldn't read the photo. Try again or type it.";
+    notes[key] = { kind: "error", text };
+  }
+  render();
+}
+
+/* ---------- Render ---------- */
+function setVal(el, v) { if (document.activeElement !== el && el.value !== v) el.value = v; }
+
+function render() {
+  const r = rec();
+  $("#todayLabel").textContent = fmtDay(localDate());
+
+  // Department
+  $("#deptNow").textContent = dept.dept ? dept.dept + (dept.lead ? " · " + dept.lead : "") : "Not set";
+  if (!dept.dept && $("#deptForm").hidden && !render.deptShown) { showDeptForm(); render.deptShown = true; }
+
+  // Editor
+  $("#curEyebrow").textContent = editingDone ? "Fixing a saved install" : "Current install";
+  $("#curTitle").textContent = r.room ? "Room " + r.room : "New install";
+  $("#curDept").textContent = [r.dept, r.lead].filter(Boolean).join(" · ");
+  STEPS.forEach((s) => {
+    const v = r[s.field] || "";
+    setVal($("#in-" + s.field), v);
+    $("#step-" + s.field).classList.toggle("done", !!v);
+    const note = $("#note-" + s.field);
+    const n = notes[activeId + ":" + s.field];
+    const unsure = v && r.unsure && r.unsure[s.field];
+    if (n) {
+      note.className = "note " + n.kind; note.textContent = n.text; note.hidden = false;
+    } else if (unsure) {
+      note.className = "note unsure"; note.hidden = false;
+      note.innerHTML = "";
+      const span = document.createElement("span"); span.textContent = "Check against the label: " + unsure;
+      const ok = document.createElement("button"); ok.type = "button"; ok.textContent = "It's correct";
+      ok.addEventListener("click", () => save({ unsure: { [s.field]: "" } }));
+      note.append(span, ok);
+    } else {
+      note.hidden = true;
+    }
+  });
+  setVal($("#startIn"), r.start || "");
+  setVal($("#endIn"), r.end || "");
+  $("#durOut").textContent = fmtDur(minutesBetween(r.start, r.end));
+  setVal($("#recDept"), r.dept || "");
+  setVal($("#recLead"), r.lead || "");
+  setVal($("#recDate"), r.date || "");
+  $("#finishBtn").textContent = editingDone ? "Save changes" : "Save install";
+  $("#cancelEditBtn").hidden = !editingDone;
+  $("#deleteBtn").hidden = !activeId;
+
+  renderSummary();
+}
+
+function doneOn(day) {
+  return installs.filter((i) => i.status === "done" && i.date === day)
+    .sort((a, b) => (a.start || "").localeCompare(b.start || "") || (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+function renderSummary() {
+  const days = [...new Set(installs.filter((i) => i.status === "done").map((i) => i.date).concat(localDate()))].sort().reverse();
+  const sel = $("#dateSel");
+  if (!days.includes(selectedDay)) selectedDay = days[0];
+  const opts = days.map((d) => d + "|" + fmtDay(d) + (d === localDate() ? " (today)" : "")).join(",");
+  if (sel.dataset.opts !== opts) {
+    sel.innerHTML = "";
+    days.forEach((d) => { const o = document.createElement("option"); o.value = d; o.textContent = fmtDay(d) + (d === localDate() ? " (today)" : ""); sel.appendChild(o); });
+    sel.dataset.opts = opts;
+  }
+  sel.value = selectedDay;
+
+  const rows = doneOn(selectedDay);
+  const body = $("#sumBody"); body.innerHTML = "";
+  let total = 0;
+  rows.forEach((i) => {
+    const m = minutesBetween(i.start, i.end); if (m != null) total += m;
+    const tr = document.createElement("tr");
+    const cell = (text, mono, flag) => {
+      const td = document.createElement("td"); if (mono) td.className = "mono";
+      td.textContent = text || "—";
+      if (flag) { const c = document.createElement("span"); c.className = "chip"; c.textContent = "check"; td.appendChild(c); }
+      tr.appendChild(td);
+    };
+    const u = i.unsure || {};
+    cell(i.oldSerial, true, !!u.oldSerial);
+    cell(i.newSerial, true, !!u.newSerial);
+    cell(i.dept); cell(i.lead);
+    cell(fmtDur(m), true);
+    cell(i.room, false, !!u.room);
+    tr.tabIndex = 0;
+    tr.addEventListener("click", () => openForEdit(i.id));
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter") openForEdit(i.id); });
+    body.appendChild(tr);
+  });
+  $("#sumEmpty").hidden = rows.length > 0;
+  $("#totals").textContent = rows.length
+    ? rows.length + " install" + (rows.length === 1 ? "" : "s") + " · " + fmtDur(total) + " total · " + fmtDur(Math.round(total / rows.length)) + " average"
+    : "";
+  $("#copyBtn").disabled = rows.length === 0;
+}
+
+/* ---------- Actions ---------- */
+function showDeptForm() {
+  $("#deptForm").hidden = false; $("#deptView").hidden = true;
+  $("#deptIn").value = dept.dept; $("#leadIn").value = dept.lead;
+  $("#deptCancel").hidden = !dept.dept;
+}
+function hideDeptForm() { $("#deptForm").hidden = true; $("#deptView").hidden = false; }
+
+function openForEdit(id) {
+  const open = installs.find((i) => i.id === activeId && i.status === "open");
+  if (open && !editingDone) parkedOpen = open.id;
+  activeId = id; editingDone = true;
+  render();
+  $("#curTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+let parkedOpen = null;
+function closeEditor() {
+  editingDone = false;
+  activeId = parkedOpen && installs.some((i) => i.id === parkedOpen && i.status === "open") ? parkedOpen : null;
+  parkedOpen = null;
+  render();
+}
+
+let deleteArmed = false;
+function bind() {
+  $("#deptChange").addEventListener("click", showDeptForm);
+  $("#deptCancel").addEventListener("click", hideDeptForm);
+  $("#deptForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = $("#deptIn").value.trim(), l = $("#leadIn").value.trim();
+    if (!d) { $("#deptIn").focus(); return; }
+    dept = { dept: d, lead: l };
+    hideDeptForm();
+    // An install in progress with nothing captured yet moves to the new department.
+    if (activeId && !editingDone) {
+      const r = rec();
+      if (!r.room && !r.newSerial && !r.oldSerial) save({ dept: d, lead: l });
+    }
+    render();
+    toast("Department set to " + d);
+    if (db) db.doc("settings/current").set({ dept: d, lead: l }).catch(() => toast("Couldn't save the department. Check your connection."));
+  });
+
+  $("#startIn").addEventListener("change", (e) => save({ start: e.target.value }));
+  $("#endIn").addEventListener("change", (e) => save({ end: e.target.value }));
+  $("#recDept").addEventListener("change", (e) => save({ dept: e.target.value.trim() }));
+  $("#recLead").addEventListener("change", (e) => save({ lead: e.target.value.trim() }));
+  $("#recDate").addEventListener("change", (e) => {
+    const v = e.target.value.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) save({ date: v }); else { toast("Use the format YYYY-MM-DD."); render(); }
+  });
+
+  $("#finishBtn").addEventListener("click", () => {
+    const r = rec();
+    if (!activeId || (!r.room && !r.newSerial && !r.oldSerial)) { toast("Capture at least the room or a serial first."); return; }
+    if (editingDone) { closeEditor(); toast("Changes saved"); return; }
+    const patch = { status: "done" };
+    if (!r.end) patch.end = hhmm(Date.now());
+    if (!r.start) patch.start = patch.end || r.end;
+    save(patch);
+    selectedDay = r.date;
+    activeId = null;
+    toast("Saved " + (r.room ? "room " + r.room : "install"));
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  $("#cancelEditBtn").addEventListener("click", closeEditor);
+  $("#deleteBtn").addEventListener("click", () => {
+    const btn = $("#deleteBtn");
+    if (!deleteArmed) {
+      deleteArmed = true; btn.textContent = "Tap again to delete";
+      setTimeout(() => { deleteArmed = false; btn.textContent = "Delete"; }, 4000);
+      return;
+    }
+    deleteArmed = false; btn.textContent = "Delete";
+    const id = activeId;
+    installs = installs.filter((i) => i.id !== id);
+    delete overlay[id];
+    if (db) writeChain = writeChain.then(() => db.collection("installs").doc(id).delete()).catch(() => toast("Couldn't delete it. Try again."));
+    if (editingDone) closeEditor(); else { activeId = null; render(); }
+    toast("Install deleted");
+  });
+
+  $("#dateSel").addEventListener("change", (e) => { selectedDay = e.target.value; renderSummary(); });
+
+  $("#copyBtn").addEventListener("click", () => {
+    const rows = doneOn(selectedDay);
+    const lines = [["Old serial", "New serial", "Department", "Dept. lead", "Duration (min)", "Room"].join("\t")]
+      .concat(rows.map((i) => [i.oldSerial, i.newSerial, i.dept, i.lead, minutesBetween(i.start, i.end) ?? "", i.room].join("\t")));
+    const text = lines.join("\n");
+    const fb = $("#copyFallback");
+    const fallback = () => { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); toast("Select all and copy the text below."); };
+    try {
+      navigator.clipboard.writeText(text).then(() => { fb.hidden = true; toast("Table copied"); }, fallback);
+    } catch (e) { fallback(); }
+  });
+}
+
+/* ---------- Start ---------- */
+buildSteps();
+bind();
+render();
+
+(async () => {
+  try { db = await window.claude?.use("db"); } catch (e) { db = null; }
+  try { sample = await window.claude?.use("sample"); } catch (e) { sample = null; }
+  if (sample) {
+    try { const lim = await sample.limits(); canImages = !!lim.images; } catch (e) { canImages = false; }
+  }
+  if (!db) { $("#noDb").hidden = false; return; }
+
+  db.doc("settings/current").onSnapshot((snap) => {
+    const d = snap.exists ? snap.data() : null;
+    if (d) { dept = { dept: String(d.dept || ""), lead: String(d.lead || "") }; if (!$("#deptForm").hidden && dept.dept) hideDeptForm(); }
+    render();
+  }, () => {});
+
+  db.collection("installs").onSnapshot((snap) => {
+    installs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    installs.forEach((i) => created.add(i.id));
+    if (!activeId && !editingDone) {
+      const open = installs.filter((i) => i.status === "open").sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
+      if (open) activeId = open.id;
+    }
+    render();
+  }, () => toast("Lost the connection to saved installs. Reload the page."));
+})();
+</script>
