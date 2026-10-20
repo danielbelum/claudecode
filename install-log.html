@@ -169,6 +169,7 @@ tbody tr:hover td { background: var(--accent-soft); }
       <label class="field">Finish<input type="time" id="endIn"></label>
       <div class="duration" id="durOut" aria-live="polite">—</div>
     </div>
+    <label class="field" style="max-width:12rem">Wait time (min), if any<input type="text" id="waitIn" inputmode="numeric" autocomplete="off" class="mono" placeholder="None"></label>
 
     <details id="moreDetails">
       <summary>Department and date for this install</summary>
@@ -200,7 +201,7 @@ tbody tr:hover td { background: var(--accent-soft); }
     <div class="totals" id="totals"></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Old serial</th><th>New serial</th><th>Department</th><th>Dept. lead</th><th>Duration</th><th>Room</th></tr></thead>
+        <thead><tr><th>Old serial</th><th>New serial</th><th>Department</th><th>Dept. lead</th><th>Duration</th><th>Wait</th><th>Room</th></tr></thead>
         <tbody id="sumBody"></tbody>
       </table>
     </div>
@@ -280,7 +281,7 @@ function rec(id = activeId) {
   return { ...blank(), ...fromStore, ...o, unsure: { ...(fromStore.unsure || {}), ...(o.unsure || {}) } };
 }
 function blank() {
-  return { status: "open", dept: dept.dept, lead: dept.lead, date: localDate(), room: "", newSerial: "", oldSerial: "", computerName: "", start: "", end: "", unsure: {} };
+  return { status: "open", dept: dept.dept, lead: dept.lead, date: localDate(), room: "", newSerial: "", oldSerial: "", computerName: "", start: "", end: "", wait: "", unsure: {} };
 }
 
 function save(patch, id = activeId) {
@@ -414,6 +415,7 @@ function render() {
   setVal($("#startIn"), r.start || "");
   setVal($("#endIn"), r.end || "");
   $("#durOut").textContent = fmtDur(minutesBetween(r.start, r.end));
+  setVal($("#waitIn"), r.wait === "" || r.wait == null ? "" : String(r.wait));
   setVal($("#recDept"), r.dept || "");
   setVal($("#recLead"), r.lead || "");
   setVal($("#recDate"), r.date || "");
@@ -458,6 +460,7 @@ function renderSummary() {
     cell(i.newSerial, true, !!u.newSerial);
     cell(i.dept); cell(i.lead);
     cell(fmtDur(m), true);
+    { const td = document.createElement("td"); td.className = "mono"; td.textContent = i.wait === "" || i.wait == null ? "" : i.wait + " min"; tr.appendChild(td); }
     cell(i.room, false, !!u.room);
     tr.tabIndex = 0;
     tr.addEventListener("click", () => openForEdit(i.id));
@@ -516,6 +519,13 @@ function bind() {
 
   $("#startIn").addEventListener("change", (e) => save({ start: e.target.value }));
   $("#endIn").addEventListener("change", (e) => save({ end: e.target.value }));
+  $("#waitIn").addEventListener("change", (e) => {
+    const v = e.target.value.trim();
+    if (v === "") { save({ wait: "" }); return; }
+    const n = parseInt(v, 10);
+    if (isNaN(n) || n < 0) { toast("Enter wait time as a number of minutes."); render(); return; }
+    save({ wait: n });
+  });
   $("#recDept").addEventListener("change", (e) => save({ dept: e.target.value.trim() }));
   $("#recLead").addEventListener("change", (e) => save({ lead: e.target.value.trim() }));
   $("#recDate").addEventListener("change", (e) => {
@@ -558,8 +568,8 @@ function bind() {
 
   $("#copyBtn").addEventListener("click", () => {
     const rows = doneOn(selectedDay);
-    const lines = [["Old serial", "New serial", "Department", "Dept. lead", "Duration (min)", "Room"].join("\t")]
-      .concat(rows.map((i) => [i.oldSerial, i.newSerial, i.dept, i.lead, minutesBetween(i.start, i.end) ?? "", i.room].join("\t")));
+    const lines = [["Old serial", "New serial", "Department", "Dept. lead", "Duration (min)", "Wait (min)", "Room"].join("\t")]
+      .concat(rows.map((i) => [i.oldSerial, i.newSerial, i.dept, i.lead, minutesBetween(i.start, i.end) ?? "", i.wait ?? "", i.room].join("\t")));
     const text = lines.join("\n");
     const fb = $("#copyFallback");
     const fallback = () => { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); toast("Select all and copy the text below."); };
