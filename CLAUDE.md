@@ -54,8 +54,9 @@ Document `settings/current`: `{ dept, lead }`.
 
 After each completed install, and when the user says they're done for the day, show the day's table in this exact column order:
 
-| Date | Old serial | New serial | Department | Dept. lead | Duration | Wait | Wait reason | Room |
+| Old serial | New serial | Area | Time to deploy | Wait time | Dept. contact | Room |
 
-- Date as M/D/YYYY. Duration = finish − start in minutes (the full time; wait isn't subtracted). Wait blank when none.
+- Area = department, Dept. contact = department lead. Time to deploy = finish − start in minutes (the full time; wait isn't subtracted). Wait time blank when none.
+- Date and wait reason aren't columns, but are still recorded in the tracker. Give the date as M/D/YYYY in the heading above the table.
 - For the end-of-day table, read the day's installs back from the tracker (`query` where date == the day), then give the total count, total time and total wait.
 - The user copies this table into another database Claude can't access.
