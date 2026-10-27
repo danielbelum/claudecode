@@ -202,7 +202,7 @@ tbody tr:hover td { background: var(--accent-soft); }
     <div class="totals" id="totals"></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Old serial</th><th>New serial</th><th>Area</th><th>Time to deploy</th><th>Wait time</th><th>Dept. contact</th><th>Room</th></tr></thead>
+        <thead><tr><th>Old serial</th><th>New serial</th><th>Area</th><th>Time to deploy</th><th>Wait time</th><th>Dept. contact</th><th>Room</th><th>Wait reason</th></tr></thead>
         <tbody id="sumBody"></tbody>
       </table>
     </div>
@@ -470,6 +470,7 @@ function renderSummary() {
     { const td = document.createElement("td"); td.className = "mono"; td.textContent = i.wait === "" || i.wait == null ? "" : i.wait + " min"; if (i.waitReason) td.title = i.waitReason; if (i.wait && !i.waitReason) { const c = document.createElement("span"); c.className = "chip"; c.textContent = "needs reason"; td.appendChild(c); } tr.appendChild(td); }
     cell(i.lead);
     cell(i.room, false, !!u.room);
+    { const td = document.createElement("td"); td.textContent = i.waitReason || ""; td.style.whiteSpace = "normal"; td.style.minWidth = "10rem"; tr.appendChild(td); }
     tr.tabIndex = 0;
     tr.addEventListener("click", () => openForEdit(i.id));
     tr.addEventListener("keydown", (e) => { if (e.key === "Enter") openForEdit(i.id); });
@@ -577,8 +578,8 @@ function bind() {
 
   $("#copyBtn").addEventListener("click", () => {
     const rows = doneOn(selectedDay);
-    const lines = [["Old serial", "New serial", "Area", "Time to deploy (min)", "Wait time (min)", "Dept. contact", "Room"].join("\t")]
-      .concat(rows.map((i) => [i.oldSerial, i.newSerial, i.dept, minutesBetween(i.start, i.end) ?? "", i.wait ?? "", i.lead, i.room].join("\t")));
+    const lines = [["Old serial", "New serial", "Area", "Time to deploy (min)", "Wait time (min)", "Dept. contact", "Room", "Wait reason"].join("\t")]
+      .concat(rows.map((i) => [i.oldSerial, i.newSerial, i.dept, minutesBetween(i.start, i.end) ?? "", i.wait ?? "", i.lead, i.room, (i.waitReason || "").replace(/[\t\n]+/g, " ")].join("\t")));
     const text = lines.join("\n");
     const fb = $("#copyFallback");
     const fallback = () => { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); toast("Select all and copy the text below."); };
